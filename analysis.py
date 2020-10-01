@@ -117,6 +117,7 @@ for index, df in enumerate(country_df_list):
     df.columns = ['datatype' if x == 'transportation_type'
                   else x for x in df.columns]
 
+
 # Adds time series data for each country into each country's dataframe
 for index, row in jhu_data.iterrows():
     country_name = row['Country/Region'].strip()
@@ -137,9 +138,18 @@ for index, row in jhu_data.iterrows():
 
     for index, df in enumerate(country_df_list):
         if df['region'].iloc[0].strip() == country_name:
+            new_index = ['geo_type',
+                         'region',
+                         'datatype',
+                         'sub-region',
+                         'country']
+            new_index.extend(list(row.index.values[5:]))
+            row.index = new_index
             modified_df = country_df_list[index].append(row,
                                                         ignore_index=True)
             country_df_list[index] = modified_df
+
+print(country_df_list[0].head())
 
 ####################
 # Machine Learning #
