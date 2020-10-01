@@ -1,0 +1,5 @@
+data/COVID-19/
+.DS_Store
+.nova
+.ipynb_checkpoints/
+data/Google_Global_Mobility_Report.csv
