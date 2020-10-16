@@ -1,5 +1,9 @@
+import os
 from datetime import datetime
+
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 #################
@@ -67,6 +71,9 @@ apple_cities = apple_data.loc[apple_data['geo_type'] == 'city']
 # Perform preprocessing to ensure compatibility
 jhu_path = './data/COVID-19/csse_covid_19_data/csse_covid_19_time_series/'
 jhu_data = pd.read_csv(jhu_path + 'time_series_covid19_confirmed_global.csv')
+
+# Rename US to United States in JHU Time Series df
+jhu_data.loc[jhu_data["Country/Region"] == "US", "Country/Region"] = "United States"
 
 # Extract column names to be renamed
 jhu_date_columns = jhu_data.loc[:, '1/22/20':]
@@ -149,8 +156,68 @@ for index, row in jhu_data.iterrows():
                                                         ignore_index=True)
             country_df_list[index] = modified_df
 
-print(country_df_list[0].head())
+
+for index, df in enumerate(country_df_list):
+    try:
+        covid_data = df.loc[df['datatype'] == 'covid'].iloc[0].tolist()[5:]
+    except:
+        country_df_list.pop(index)
+
+
+############
+# Analysis #
+############
+
+# Ensures that figures directory exists
+# If figure regeneration is needed,
+# it ensures that the storage directory is regenerated
+figures_path = os.path.join(os.getcwd(), 'figures')
+if not os.path.exists(figures_path):
+    os.makedirs(os.path.join(os.getcwd(),'figures'))
+
+for df in country_df_list:
+
+    df = df.fillna(0)
+
+    country_name = df['region'][0]
+
+    country_path = os.path.join(figures_path, country_name)
+    if not os.path.exists(country_path):
+        os.makedirs(country_path)
+
+    date_list = df.columns.values.tolist()[5:]
+    covid_data = df.loc[df['datatype'] == 'covid'].iloc[0].tolist()[5:]
+    driving_data = df.loc[df['datatype'] == 'driving'].iloc[0].tolist()[5:]
+    #driving_data = [x / 10 for x in driving_data]
+    walking_data = df.loc[df['datatype'] == 'walking'].iloc[0].tolist()[5:]
+    #walking_data = [x / 10 for x in walking_data]
+
+    fig, ax0 = plt.subplots()
+    ax0.set_xscale('linear')
+    ax0.ticklabel_format(useOffset=False, style='plain')
+    ax0.scatter(date_list, covid_data, s=walking_data)
+    fig.suptitle(country_name + ": Correlation of Walking Directions and Confirmed COVID Cases")
+    ax0.set_xlabel("Confirmed Covid Cases")
+    ax0.set_ylabel("Percent Change of Walking Directions Requested")
+    file_name = country_name + '_covid_walking.png'
+    fig.savefig(os.path.join(country_path, file_name))
+    plt.clf()
+    plt.close(fig)
+
+    fig, ax0 = plt.subplots()
+    ax0.set_xscale('linear')
+    ax0.ticklabel_format(useOffset=False, style='plain')
+    ax0.scatter(date_list, covid_data, s=driving_data)
+    fig.suptitle(country_name + ": Correlation of Driving Directions and Confirmed COVID Cases")
+    ax0.set_xlabel("Confirmed Covid Cases")
+    ax0.set_ylabel("Percent Change of Driving Directions Requested")
+    file_name = country_name + '_covid_driving.png'
+    fig.savefig(os.path.join(country_path, file_name))
+    plt.clf()
+    plt.close()
+
 
 ####################
 # Machine Learning #
 ####################
+
