@@ -6,12 +6,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras.models import Sequential
-from tensorflow.keras import layers
-
 
 #################
 # Preprocessing #
@@ -74,8 +68,6 @@ apple_cities = apple_data.loc[apple_data['geo_type'] == 'city']
 """
 
 # Read in JHU time series data
-# Date format mismatches with Apple/Google datasets
-# Perform preprocessing to ensure compatibility
 jhu_path = './data/COVID-19/csse_covid_19_data/csse_covid_19_time_series/'
 jhu_data = pd.read_csv(jhu_path + 'time_series_covid19_confirmed_global.csv')
 
@@ -83,6 +75,7 @@ jhu_data = pd.read_csv(jhu_path + 'time_series_covid19_confirmed_global.csv')
 jhu_data.loc[jhu_data["Country/Region"] == "US", "Country/Region"] = "United States"
 
 # Extract column names to be renamed
+# Date format does not match other data, so do conversion
 jhu_date_columns = jhu_data.loc[:, '1/22/20':]
 column_names = jhu_date_columns.columns
 updated_column_names = []
@@ -103,22 +96,38 @@ del jhu_date_columns
 del column_names
 del updated_column_names
 
+
+
+
+
+
+"""
+    Mobility data and COVID data is desired on a per country basis.
+    This will create a a list of dataframes where each dataframe
+    holds the data from Apple, Google, and JHU for a single country.
+    Country's missing one or more datasources are not included.
+"""
+
 # List of DataFrames for each country
 country_df_list = []
 
+# Gets all countries in Apple's dataset
 for index, row in apple_countries.iterrows():
     country_name = row['region'].strip()
 
     # Flag for determining if matching country dataframe was found
     found = False
 
+    # Iterates through list of country dataframes
     for index, df in enumerate(country_df_list):
+        # Checks to determine if country is already present
         if df['region'].iloc[0].strip() == country_name:
             modified_df = country_df_list[index].append(row,
                                                         ignore_index=True)
             country_df_list[index] = modified_df
             found = True
 
+    # Ensures that countries that were not already found are added
     if not found:
         country_df_list.append(row.to_frame().T)
 
@@ -132,7 +141,7 @@ for index, df in enumerate(country_df_list):
                   else x for x in df.columns]
 
 
-# Adds time series data for each country into each country's dataframe
+# Adds JHU data for each country into each country's dataframe
 for index, row in jhu_data.iterrows():
     country_name = row['Country/Region'].strip()
     subregion_name = str(row['Province/State']).strip()
@@ -150,6 +159,7 @@ for index, row in jhu_data.iterrows():
                     row['2020-01-22':'2020-09-21']],
                     axis=0)
 
+    # Searches for matching country dataframe
     for index, df in enumerate(country_df_list):
         if df['region'].iloc[0].strip() == country_name:
             new_index = ['geo_type',
@@ -163,7 +173,7 @@ for index, row in jhu_data.iterrows():
                                                         ignore_index=True)
             country_df_list[index] = modified_df
 
-
+# Filter out countries that are lacking covid data
 for index, df in enumerate(country_df_list):
     try:
         covid_data = df.loc[df['datatype'] == 'covid'].iloc[0].tolist()[5:]
@@ -182,20 +192,28 @@ figures_path = os.path.join(os.getcwd(), 'figures')
 if not os.path.exists(figures_path):
     os.makedirs(os.path.join(os.getcwd(),'figures'))
 
+# Placed in a function for ease of multiprocessing
 def country_analysis(df):
+    # Ensures that NaN are set to 0
     df = df.fillna(0)
 
+    # Store country name for labeling
     country_name = df['region'][0]
 
+    # Ensures that there is a path for figures to be stored (per country)
     country_path = os.path.join(figures_path, country_name)
     if not os.path.exists(country_path):
         os.makedirs(country_path)
 
+    # Converts df rows to lists for easier operations
     date_list = df.columns.values.tolist()[5:]
     covid_data = df.loc[df['datatype'] == 'covid'].iloc[0].tolist()[5:]
     driving_data = df.loc[df['datatype'] == 'driving'].iloc[0].tolist()[5:]
     walking_data = df.loc[df['datatype'] == 'walking'].iloc[0].tolist()[5:]
 
+    # The data was initially too messy to interpret, and without
+    # normalization it was useless. This takes average values over 7 day
+    # intervals to make the data significantly more readable
     walking_means = []
     driving_means = []
     labels = []
@@ -212,14 +230,18 @@ def country_analysis(df):
         driving_mean /= 7
         walking_means.append(walking_mean)
         driving_means.append(driving_mean)
+
+        # Labels are now number of days since start of data
         labels.append((x*7)+4)
 
-
+    # Draw Plots for each country's respective walking and driving data
+    # Plots are scatter plots with, the size of each data point on the graph
+    # corresponding to the amount of directions requested that day
+    # (larger dots == more directions, smaller == less)
     fig, ax0 = plt.subplots()
     ax0.set_xscale('linear')
     ax0.ticklabel_format(useOffset=False, style='plain')
     ax0.scatter(labels, covid, s=walking_means)
-    #ax0.scatter(date_list, covid_data, s=walking_data)
     fig.suptitle(country_name + ": Correlation of Walking Directions and Confirmed COVID Cases")
     ax0.set_xlabel("Time Passed In Days Since Jan 22nd")
     ax0.set_ylabel("Confirmed Covid Cases")
@@ -241,82 +263,13 @@ def country_analysis(df):
     plt.clf()
     plt.close()
 
+
 # Parallelism to ensure that analysis and graph
 # generation isn't prohibitively time consuming.
-
-# processes = []
-# for df in country_df_list:
-#     p = Process(target=country_analysis, args=(df,))
-#     p.start()
-#     processes.append(p)
-# for p in processes:
-#     p.join()
-
-
-
-####################
-# Machine Learning #
-####################
-
-n_input_size = 100
-
-def preprocess_ml_data(df):
-    df = df.fillna(0)
-
-    country_name = df['region'][0]
-    date_list = df.columns.values.tolist()[5:]
-    covid_data = df.loc[df['datatype'] == 'covid'].iloc[0].tolist()[5:]
-    driving_data = df.loc[df['datatype'] == 'driving'].iloc[0].tolist()[5:]
-    walking_data = df.loc[df['datatype'] == 'walking'].iloc[0].tolist()[5:]
-
-
-
-    # Array of arrays. Each nested array has 28 days of case data
-    X_train = []
-    Y_train = []
-    for index, datapoint in enumerate(covid_data):
-        data = []
-
-        # Ensures that bounds exception isn't raised
-        if index < len(driving_data) - (n_input_size + 1):
-            # Gets datapoint and 28 days following
-            for i in range(0, n_input_size):
-                data.append(driving_data[index+i])
-
-        X_train.append(data)
-
-    X_train = [x for x in X_train if len(x) == n_input_size]
-    X_len = len(X_train)
-    X_train = np.array(X_train)
-
-    return X_train.reshape((X_len, n_input_size, 1)), np.array(covid_data[:X_len])
-
-x_train, y_train = preprocess_ml_data(country_df_list[0])
-
-#############
-# RNN Model #
-#############
-model = Sequential()
-model.add(layers.LSTM(32, input_shape=(n_input_size,1), return_sequences=True))
-# model.add(layers.LSTM(32, return_sequences=True))
-# model.add(layers.LSTM(32, return_sequences=True))
-# model.add(layers.LSTM(32, return_sequences=True))
-# model.add(layers.Activation('softmax'))
-model.add(layers.Dense(1))
-
-early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
-                                                  patience=2,
-                                                  mode='min')
-
-model.compile(loss=tf.losses.MeanSquaredError(),
-              optimizer=tf.optimizers.Adam(),
-              metrics=[tf.metrics.MeanAbsoluteError()])
-
-history = model.fit(x_train, y_train, epochs=30,
-                    validation_split=0.1,
-                    callbacks=[early_stopping])
-
-# history = model.fit(x_train, y_train,
-#                     epochs=30, batch_size=16,
-#                     validation_split=0.1,
-#                     verbose=1, shuffle=False)
+processes = []
+for df in country_df_list:
+    p = Process(target=country_analysis, args=(df,))
+    p.start()
+    processes.append(p)
+for p in processes:
+    p.join()
