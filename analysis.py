@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from multiprocessing import Process
 
 import pandas as pd
 import numpy as np
@@ -175,8 +176,7 @@ figures_path = os.path.join(os.getcwd(), 'figures')
 if not os.path.exists(figures_path):
     os.makedirs(os.path.join(os.getcwd(),'figures'))
 
-for df in country_df_list:
-
+def country_analysis(df):
     df = df.fillna(0)
 
     country_name = df['region'][0]
@@ -188,17 +188,35 @@ for df in country_df_list:
     date_list = df.columns.values.tolist()[5:]
     covid_data = df.loc[df['datatype'] == 'covid'].iloc[0].tolist()[5:]
     driving_data = df.loc[df['datatype'] == 'driving'].iloc[0].tolist()[5:]
-    #driving_data = [x / 10 for x in driving_data]
     walking_data = df.loc[df['datatype'] == 'walking'].iloc[0].tolist()[5:]
-    #walking_data = [x / 10 for x in walking_data]
+
+    walking_means = []
+    driving_means = []
+    labels = []
+    covid = []
+    for x in range(0, int(len(covid_data)/7)):
+        walking_mean = 0
+        driving_mean = 0
+        for i in range(0, 6):
+            walking_mean += walking_data[(x*7)+i]
+            driving_mean += driving_data[(x*7)+i]
+            if i == 4:
+                covid.append(covid_data[(x*7)+i])
+        walking_mean /= 7
+        driving_mean /= 7
+        walking_means.append(walking_mean)
+        driving_means.append(driving_mean)
+        labels.append((x*7)+4)
+
 
     fig, ax0 = plt.subplots()
     ax0.set_xscale('linear')
     ax0.ticklabel_format(useOffset=False, style='plain')
-    ax0.scatter(date_list, covid_data, s=walking_data)
+    ax0.scatter(labels, covid, s=walking_means)
+    #ax0.scatter(date_list, covid_data, s=walking_data)
     fig.suptitle(country_name + ": Correlation of Walking Directions and Confirmed COVID Cases")
-    ax0.set_xlabel("Confirmed Covid Cases")
-    ax0.set_ylabel("Percent Change of Walking Directions Requested")
+    ax0.set_xlabel("Time Passed In Days Since Jan 22nd")
+    ax0.set_ylabel("Confirmed Covid Cases")
     file_name = country_name + '_covid_walking.png'
     fig.savefig(os.path.join(country_path, file_name))
     plt.clf()
@@ -207,14 +225,27 @@ for df in country_df_list:
     fig, ax0 = plt.subplots()
     ax0.set_xscale('linear')
     ax0.ticklabel_format(useOffset=False, style='plain')
-    ax0.scatter(date_list, covid_data, s=driving_data)
+    ax0.scatter(labels, covid, s=driving_means)
+    #ax0.scatter(date_list, covid_data, s=driving_data)
     fig.suptitle(country_name + ": Correlation of Driving Directions and Confirmed COVID Cases")
-    ax0.set_xlabel("Confirmed Covid Cases")
-    ax0.set_ylabel("Percent Change of Driving Directions Requested")
+    ax0.set_xlabel("Time Passed In Days Since Jan 22nd")
+    ax0.set_ylabel("Confirmed Covid Cases")
     file_name = country_name + '_covid_driving.png'
     fig.savefig(os.path.join(country_path, file_name))
     plt.clf()
     plt.close()
+
+# Parallelism to ensure that analysis and graph
+# generation isn't prohibitively time consuming.
+
+processes = []
+for df in country_df_list:
+    p = Process(target=country_analysis, args=(df,))
+    p.start()
+    processes.append(p)
+for p in processes:
+    p.join()
+
 
 
 ####################
