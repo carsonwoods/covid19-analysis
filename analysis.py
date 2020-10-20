@@ -6,6 +6,12 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+import numpy as np
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras.models import Sequential
+from tensorflow.keras import layers
+
 
 #################
 # Preprocessing #
@@ -238,13 +244,13 @@ def country_analysis(df):
 # Parallelism to ensure that analysis and graph
 # generation isn't prohibitively time consuming.
 
-processes = []
-for df in country_df_list:
-    p = Process(target=country_analysis, args=(df,))
-    p.start()
-    processes.append(p)
-for p in processes:
-    p.join()
+# processes = []
+# for df in country_df_list:
+#     p = Process(target=country_analysis, args=(df,))
+#     p.start()
+#     processes.append(p)
+# for p in processes:
+#     p.join()
 
 
 
@@ -252,3 +258,65 @@ for p in processes:
 # Machine Learning #
 ####################
 
+n_input_size = 100
+
+def preprocess_ml_data(df):
+    df = df.fillna(0)
+
+    country_name = df['region'][0]
+    date_list = df.columns.values.tolist()[5:]
+    covid_data = df.loc[df['datatype'] == 'covid'].iloc[0].tolist()[5:]
+    driving_data = df.loc[df['datatype'] == 'driving'].iloc[0].tolist()[5:]
+    walking_data = df.loc[df['datatype'] == 'walking'].iloc[0].tolist()[5:]
+
+
+
+    # Array of arrays. Each nested array has 28 days of case data
+    X_train = []
+    Y_train = []
+    for index, datapoint in enumerate(covid_data):
+        data = []
+
+        # Ensures that bounds exception isn't raised
+        if index < len(driving_data) - (n_input_size + 1):
+            # Gets datapoint and 28 days following
+            for i in range(0, n_input_size):
+                data.append(driving_data[index+i])
+
+        X_train.append(data)
+
+    X_train = [x for x in X_train if len(x) == n_input_size]
+    X_len = len(X_train)
+    X_train = np.array(X_train)
+
+    return X_train.reshape((X_len, n_input_size, 1)), np.array(covid_data[:X_len])
+
+x_train, y_train = preprocess_ml_data(country_df_list[0])
+
+#############
+# RNN Model #
+#############
+model = Sequential()
+model.add(layers.LSTM(32, input_shape=(n_input_size,1), return_sequences=True))
+# model.add(layers.LSTM(32, return_sequences=True))
+# model.add(layers.LSTM(32, return_sequences=True))
+# model.add(layers.LSTM(32, return_sequences=True))
+# model.add(layers.Activation('softmax'))
+model.add(layers.Dense(1))
+
+early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
+                                                  patience=2,
+                                                  mode='min')
+
+model.compile(loss=tf.losses.MeanSquaredError(),
+              optimizer=tf.optimizers.Adam(),
+              metrics=[tf.metrics.MeanAbsoluteError()])
+
+history = model.fit(x_train, y_train, epochs=30,
+                    validation_split=0.1,
+                    callbacks=[early_stopping])
+
+# history = model.fit(x_train, y_train,
+#                     epochs=30, batch_size=16,
+#                     validation_split=0.1,
+#                     verbose=1, shuffle=False)
