@@ -254,7 +254,6 @@ def country_analysis(df):
     ax0.set_xscale('linear')
     ax0.ticklabel_format(useOffset=False, style='plain')
     ax0.scatter(labels, covid, s=driving_means)
-    #ax0.scatter(date_list, covid_data, s=driving_data)
     fig.suptitle(country_name + ": Correlation of Driving Directions and Confirmed COVID Cases")
     ax0.set_xlabel("Time Passed In Days Since Jan 22nd")
     ax0.set_ylabel("Confirmed Covid Cases")
