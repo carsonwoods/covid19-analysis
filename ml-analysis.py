@@ -1,3 +1,6 @@
+# Influenced heavily by
+# https://www.tensorflow.org/tutorials/structured_data/time_series#normalize_the_data
+
 import os
 from datetime import datetime
 from multiprocessing import Process
@@ -329,5 +332,16 @@ lstm_model = tf.keras.models.Sequential([
     tf.keras.layers.Dense(units=1)
 ])
 
-compile_and_fit(lstm_model, w)
+gru_model = tf.keras.models.Sequential([
+    # Shape [batch, time, features] => [batch, time, lstm_units]
+    tf.keras.layers.GRU(32, return_sequences=True),
+    tf.keras.layers.GRU(32, return_sequences=True),
+    tf.keras.layers.GRU(32, return_sequences=True),
+    tf.keras.layers.Dense(units=1000),
+    # Shape => [batch, time, features]
+    tf.keras.layers.Dense(units=1)
+])
+
+#compile_and_fit(lstm_model, w)
+compile_and_fit(gru_model, w)
 
