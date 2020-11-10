@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from multiprocessing import Process
 
 import pandas as pd
 import numpy as np
@@ -57,18 +58,15 @@ apple_cities = apple_data.loc[apple_data['geo_type'] == 'city']
 """
     Google Data Informal Documentation
 """
-
 # Read in Google Mobility Data
-# google_data = pd.read_csv('./data/Google_Global_Mobility_Report.csv',
-#                           low_memory=False)
+google_data = pd.read_csv('./data/Google_Global_Mobility_Report.csv',
+                          low_memory=False).fillna(0)
 
 """
     John Hopkins Data Informal Documentation
 """
 
 # Read in JHU time series data
-# Date format mismatches with Apple/Google datasets
-# Perform preprocessing to ensure compatibility
 jhu_path = './data/COVID-19/csse_covid_19_data/csse_covid_19_time_series/'
 jhu_data = pd.read_csv(jhu_path + 'time_series_covid19_confirmed_global.csv')
 
@@ -76,6 +74,7 @@ jhu_data = pd.read_csv(jhu_path + 'time_series_covid19_confirmed_global.csv')
 jhu_data.loc[jhu_data["Country/Region"] == "US", "Country/Region"] = "United States"
 
 # Extract column names to be renamed
+# Date format does not match other data, so do conversion
 jhu_date_columns = jhu_data.loc[:, '1/22/20':]
 column_names = jhu_date_columns.columns
 updated_column_names = []
@@ -96,22 +95,35 @@ del jhu_date_columns
 del column_names
 del updated_column_names
 
+
+
+"""
+    Mobility data and COVID data is desired on a per country basis.
+    This will create a a list of dataframes where each dataframe
+    holds the data from Apple, Google, and JHU for a single country.
+    Country's missing one or more datasources are not included.
+"""
+
 # List of DataFrames for each country
 country_df_list = []
 
+# Gets all countries in Apple's dataset
 for index, row in apple_countries.iterrows():
     country_name = row['region'].strip()
 
     # Flag for determining if matching country dataframe was found
     found = False
 
+    # Iterates through list of country dataframes
     for index, df in enumerate(country_df_list):
+        # Checks to determine if country is already present
         if df['region'].iloc[0].strip() == country_name:
             modified_df = country_df_list[index].append(row,
                                                         ignore_index=True)
             country_df_list[index] = modified_df
             found = True
 
+    # Ensures that countries that were not already found are added
     if not found:
         country_df_list.append(row.to_frame().T)
 
@@ -125,7 +137,75 @@ for index, df in enumerate(country_df_list):
                   else x for x in df.columns]
 
 
-# Adds time series data for each country into each country's dataframe
+# Extract Google country data into dataframe
+for country in set(google_data['country_region'].to_list()):
+
+    # Second line ensures that no duplicate city data from countries is picked up
+    country_data = google_data.loc[google_data['country_region'] == country]
+    country_data = country_data.loc[country_data['sub_region_1'] == 0]
+
+    # Seperates description information from mobility data
+    # temp: stores mobility data
+    # country_data: stores description information
+    temp = country_data.transpose().iloc[7:]
+    country_data = country_data.transpose().iloc[:7]
+    country_data = country_data.iloc[:,:6]
+    country_data = country_data.transpose()
+
+    # creates a single column dataframe
+    # will be used to label dataframe within country dataframe
+    datatypes = temp.index.values.tolist()
+    datatypes = pd.DataFrame(datatypes, columns=['datatype'])
+
+    # renames column index in temp to use date format
+    # renames row indices to be numeric
+    # this makes concatenation work later
+    temp.columns = temp.iloc[0]
+    temp = temp.drop(temp.index[0])
+    temp.index = list(range(6))
+    datatypes = datatypes.drop(datatypes.index[0])
+    datatypes.index = list(range(6))
+
+    # creates country dataframe with all information
+    # additional logic is needed to match overall column index format
+    google_country_df = pd.concat([country_data, datatypes, temp], axis=1)
+    google_country_df.rename(columns={'country_region_code':'geo_type',
+                                      'country_region':'region',
+                                      'sub_region_1':'sub-region',
+                                      'sub_region_2':'country'}, inplace=True)
+
+    # reorder columns to match country_df
+    cols = list(google_country_df.columns.values)
+    cols_reorder = ['geo_type',
+                    'region',
+                    'datatype',
+                    'sub-region',
+                    'country']
+    cols = cols_reorder + cols[8:]
+
+    google_country_df = google_country_df[cols].iloc[0:6]
+
+    # Fill NaN with 0
+    google_country_df = google_country_df.fillna(0)
+
+
+    df = google_country_df.iloc[:, 5:]
+
+    df = pd.concat([google_country_df.iloc[:, 0:6],
+                                   df.groupby(df.columns, axis=1).mean()],
+                                  axis=1)
+
+    google_country_df = df.loc[:,~df.columns.duplicated()]
+
+    # find matching country in country_df_list
+    # append google data to matching dataframe
+    for index, country_df in enumerate(country_df_list):
+        if country_df['region'].iloc[0].strip() == country.strip():
+            df = pd.concat([country_df, google_country_df], axis=0)
+            country_df_list[index] = df.fillna(0)
+
+
+# Adds JHU data for each country into each country's dataframe
 for index, row in jhu_data.iterrows():
     country_name = row['Country/Region'].strip()
     subregion_name = str(row['Province/State']).strip()
@@ -143,6 +223,7 @@ for index, row in jhu_data.iterrows():
                     row['2020-01-22':'2020-09-21']],
                     axis=0)
 
+    # Searches for matching country dataframe
     for index, df in enumerate(country_df_list):
         if df['region'].iloc[0].strip() == country_name:
             new_index = ['geo_type',
@@ -156,7 +237,7 @@ for index, row in jhu_data.iterrows():
                                                         ignore_index=True)
             country_df_list[index] = modified_df
 
-
+# Filter out countries that are lacking covid data
 for index, df in enumerate(country_df_list):
     try:
         covid_data = df.loc[df['datatype'] == 'covid'].iloc[0].tolist()[5:]
@@ -175,30 +256,59 @@ figures_path = os.path.join(os.getcwd(), 'figures')
 if not os.path.exists(figures_path):
     os.makedirs(os.path.join(os.getcwd(),'figures'))
 
-for df in country_df_list:
-
+# Placed in a function for ease of multiprocessing
+def country_analysis(df):
+    # Ensures that NaN are set to 0
     df = df.fillna(0)
 
+    # Store country name for labeling
     country_name = df['region'][0]
 
+    # Ensures that there is a path for figures to be stored (per country)
     country_path = os.path.join(figures_path, country_name)
     if not os.path.exists(country_path):
         os.makedirs(country_path)
 
+    # Converts df rows to lists for easier operations
     date_list = df.columns.values.tolist()[5:]
     covid_data = df.loc[df['datatype'] == 'covid'].iloc[0].tolist()[5:]
     driving_data = df.loc[df['datatype'] == 'driving'].iloc[0].tolist()[5:]
-    #driving_data = [x / 10 for x in driving_data]
     walking_data = df.loc[df['datatype'] == 'walking'].iloc[0].tolist()[5:]
-    #walking_data = [x / 10 for x in walking_data]
 
+    # The data was initially too messy to interpret, and without
+    # normalization it was useless. This takes average values over 7 day
+    # intervals to make the data significantly more readable
+    walking_means = []
+    driving_means = []
+    labels = []
+    covid = []
+    for x in range(0, int(len(covid_data)/7)):
+        walking_mean = 0
+        driving_mean = 0
+        for i in range(0, 6):
+            walking_mean += walking_data[(x*7)+i]
+            driving_mean += driving_data[(x*7)+i]
+            if i == 4:
+                covid.append(covid_data[(x*7)+i])
+        walking_mean /= 7
+        driving_mean /= 7
+        walking_means.append(walking_mean)
+        driving_means.append(driving_mean)
+
+        # Labels are now number of days since start of data
+        labels.append((x*7)+4)
+
+    # Draw Plots for each country's respective walking and driving data
+    # Plots are scatter plots with, the size of each data point on the graph
+    # corresponding to the amount of directions requested that day
+    # (larger dots == more directions, smaller == less)
     fig, ax0 = plt.subplots()
     ax0.set_xscale('linear')
     ax0.ticklabel_format(useOffset=False, style='plain')
-    ax0.scatter(date_list, covid_data, s=walking_data)
+    ax0.scatter(labels, covid, s=walking_means)
     fig.suptitle(country_name + ": Correlation of Walking Directions and Confirmed COVID Cases")
-    ax0.set_xlabel("Confirmed Covid Cases")
-    ax0.set_ylabel("Percent Change of Walking Directions Requested")
+    ax0.set_xlabel("Time Passed In Days Since Jan 22nd")
+    ax0.set_ylabel("Confirmed Covid Cases")
     file_name = country_name + '_covid_walking.png'
     fig.savefig(os.path.join(country_path, file_name))
     plt.clf()
@@ -207,17 +317,22 @@ for df in country_df_list:
     fig, ax0 = plt.subplots()
     ax0.set_xscale('linear')
     ax0.ticklabel_format(useOffset=False, style='plain')
-    ax0.scatter(date_list, covid_data, s=driving_data)
+    ax0.scatter(labels, covid, s=driving_means)
     fig.suptitle(country_name + ": Correlation of Driving Directions and Confirmed COVID Cases")
-    ax0.set_xlabel("Confirmed Covid Cases")
-    ax0.set_ylabel("Percent Change of Driving Directions Requested")
+    ax0.set_xlabel("Time Passed In Days Since Jan 22nd")
+    ax0.set_ylabel("Confirmed Covid Cases")
     file_name = country_name + '_covid_driving.png'
     fig.savefig(os.path.join(country_path, file_name))
     plt.clf()
     plt.close()
 
 
-####################
-# Machine Learning #
-####################
-
+# Parallelism to ensure that analysis and graph
+# generation isn't prohibitively time consuming.
+processes = []
+for df in country_df_list:
+    p = Process(target=country_analysis, args=(df,))
+    p.start()
+    processes.append(p)
+for p in processes:
+    p.join()
