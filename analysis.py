@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 #################
 # Preprocessing #
 #################
-
 """
     Apple Data Informal Documentation
 
@@ -62,10 +61,11 @@ apple_cities = apple_data.loc[apple_data['geo_type'] == 'city']
 google_data = pd.read_csv('./data/Google_Global_Mobility_Report.csv',
                           low_memory=False).fillna(0)
 
+
+
 """
     John Hopkins Data Informal Documentation
 """
-
 # Read in JHU time series data
 jhu_path = './data/COVID-19/csse_covid_19_data/csse_covid_19_time_series/'
 jhu_data = pd.read_csv(jhu_path + 'time_series_covid19_confirmed_global.csv')
@@ -195,7 +195,14 @@ for country in set(google_data['country_region'].to_list()):
                                    df.groupby(df.columns, axis=1).mean()],
                                   axis=1)
 
-    google_country_df = df.loc[:,~df.columns.duplicated()]
+    df = df.loc[:,~df.columns.duplicated()]
+
+    # Normalize data to match apple dataset
+    numeric_cols = [col for col in df if df[col].dtype.kind != 'O']
+    df[numeric_cols] += 100
+    df['geo_type'] = "country/region"
+    df['region'] = country
+    google_country_df = df
 
     # find matching country in country_df_list
     # append google data to matching dataframe
@@ -274,6 +281,9 @@ def country_analysis(df):
     covid_data = df.loc[df['datatype'] == 'covid'].iloc[0].tolist()[5:]
     driving_data = df.loc[df['datatype'] == 'driving'].iloc[0].tolist()[5:]
     walking_data = df.loc[df['datatype'] == 'walking'].iloc[0].tolist()[5:]
+    if 'residential_percent_change_from_baseline' in df.values:
+        residential_data = df.loc[df['datatype'] == 'residential_percent_change_from_baseline'].iloc[0].tolist()[5:]
+        workplace_data = df.loc[df['datatype'] == 'workplaces_percent_change_from_baseline'].iloc[0].tolist()[5:]
 
     # The data was initially too messy to interpret, and without
     # normalization it was useless. This takes average values over 7 day
@@ -282,18 +292,35 @@ def country_analysis(df):
     driving_means = []
     labels = []
     covid = []
+
+    if 'residential_percent_change_from_baseline' in df.values:
+        residential_means = []
+        workplace_means = []
+
     for x in range(0, int(len(covid_data)/7)):
         walking_mean = 0
         driving_mean = 0
+        workplace_mean = 0
+        residential_mean = 0
         for i in range(0, 6):
             walking_mean += walking_data[(x*7)+i]
             driving_mean += driving_data[(x*7)+i]
+            if 'residential_percent_change_from_baseline' in df.values:
+                workplace_mean += workplace_data[(x*7)+i]
+                residential_mean += residential_data[(x*7)+i]
             if i == 4:
                 covid.append(covid_data[(x*7)+i])
         walking_mean /= 7
         driving_mean /= 7
+        if 'residential_percent_change_from_baseline' in df.values:
+            workplace_mean /= 7
+            residential_mean /= 7
+
         walking_means.append(walking_mean)
         driving_means.append(driving_mean)
+        if 'residential_percent_change_from_baseline' in df.values:
+            workplace_means.append(workplace_mean)
+            residential_means.append(residential_mean)
 
         # Labels are now number of days since start of data
         labels.append((x*7)+4)
@@ -321,10 +348,35 @@ def country_analysis(df):
     fig.suptitle(country_name + ": Correlation of Driving Directions and Confirmed COVID Cases")
     ax0.set_xlabel("Time Passed In Days Since Jan 22nd")
     ax0.set_ylabel("Confirmed Covid Cases")
-    file_name = country_name + '_covid_driving.png'
+    file_name = country_name + '_covid_driving_apple.png'
     fig.savefig(os.path.join(country_path, file_name))
     plt.clf()
     plt.close()
+
+    if 'residential_percent_change_from_baseline' in df.values:
+        fig, ax0 = plt.subplots()
+        ax0.set_xscale('linear')
+        ax0.ticklabel_format(useOffset=False, style='plain')
+        ax0.scatter(labels, covid, s=residential_means)
+        fig.suptitle(country_name + ": Correlation of Residential Directions and Confirmed COVID Cases")
+        ax0.set_xlabel("Time Passed In Days Since Jan 22nd")
+        ax0.set_ylabel("Confirmed Covid Cases")
+        file_name = country_name + '_covid_residential_google.png'
+        fig.savefig(os.path.join(country_path, file_name))
+        plt.clf()
+        plt.close()
+
+        fig, ax0 = plt.subplots()
+        ax0.set_xscale('linear')
+        ax0.ticklabel_format(useOffset=False, style='plain')
+        ax0.scatter(labels, covid, s=workplace_means)
+        fig.suptitle(country_name + ": Correlation of Workplace Directions and Confirmed COVID Cases")
+        ax0.set_xlabel("Time Passed In Days Since Jan 22nd")
+        ax0.set_ylabel("Confirmed Covid Cases")
+        file_name = country_name + '_covid_workplace_google.png'
+        fig.savefig(os.path.join(country_path, file_name))
+        plt.clf()
+        plt.close()
 
 
 # Parallelism to ensure that analysis and graph
