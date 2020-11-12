@@ -417,5 +417,5 @@ gru_model = tf.keras.models.Sequential([
 #compile_and_fit(lstm_model, w)
 model = compile_and_fit(gru_model, w)
 
-val_performance = lstm_model.evaluate(w.val)
-performance = lstm_model.evaluate(w.test, verbose=0)
+val_performance = gru_model.evaluate(w.val)
+performance = gru_model.evaluate(w.test, verbose=0)
