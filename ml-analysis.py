@@ -355,8 +355,8 @@ def preprocess_data(df):
     """
     column_indices = {name: i for i, name in enumerate(df.columns)}
     n = len(df)
-    train_df = df[0:int(n*0.7)]
-    val_df = df[int(n*0.7):int(n*0.9)]
+    train_df = df[0:int(n*0.5)]
+    val_df = df[int(n*0.5):int(n*0.9)]
     test_df = df[int(n*0.9):]
 
     # Perform Data Normalization
@@ -394,7 +394,6 @@ def compile_and_fit(model, window, patience=2, MAX_EPOCHS=30):
 
 
 df = country_df_list[1].transpose().fillna(0)[5:]
-print(df)
 w = preprocess_data(df)
 
 lstm_model = tf.keras.models.Sequential([
@@ -414,8 +413,6 @@ gru_model = tf.keras.models.Sequential([
     tf.keras.layers.Dense(units=1)
 ])
 
-print(w.val_df)
-exit()
 
 #compile_and_fit(lstm_model, w)
 model = compile_and_fit(gru_model, w)
