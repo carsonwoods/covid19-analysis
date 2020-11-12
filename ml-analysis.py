@@ -378,15 +378,18 @@ def preprocess_data(df):
                            test_df=test_df)
 
 
-def compile_and_fit(model, window, patience=2, MAX_EPOCHS=300):
+def compile_and_fit(model, window, patience=2, MAX_EPOCHS=30):
+    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
+                                                      patience=patience,
+                                                      mode='min')
 
     model.compile(loss=tf.losses.MeanSquaredError(),
                   optimizer=tf.optimizers.Adam(),
                   metrics=[tf.metrics.MeanAbsoluteError()])
 
     history = model.fit(window.train, epochs=MAX_EPOCHS,
-                        validation_data=window.val)
-                        #callbacks=[early_stopping])
+                        validation_data=window.val,
+                        callbacks=[early_stopping])
     return history
 
 
@@ -411,5 +414,11 @@ gru_model = tf.keras.models.Sequential([
     tf.keras.layers.Dense(units=1)
 ])
 
+print(w.val_df)
+exit()
+
 #compile_and_fit(lstm_model, w)
 model = compile_and_fit(gru_model, w)
+
+val_performance = gru_model.evaluate(w.train)
+#performance = gru_model.evaluate(w.test, verbose=0)
