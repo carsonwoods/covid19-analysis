@@ -67,15 +67,15 @@ apple_cities = apple_data.loc[apple_data['geo_type'] == 'city']
 """
     Google Data Informal Documentation
 """
-
 # Read in Google Mobility Data
-# google_data = pd.read_csv('./data/Google_Global_Mobility_Report.csv',
-#                           low_memory=False)
+google_data = pd.read_csv('./data/Google_Global_Mobility_Report.csv',
+                          low_memory=False).fillna(0)
+
+
 
 """
     John Hopkins Data Informal Documentation
 """
-
 # Read in JHU time series data
 jhu_path = './data/COVID-19/csse_covid_19_data/csse_covid_19_time_series/'
 jhu_data = pd.read_csv(jhu_path + 'time_series_covid19_confirmed_global.csv')
@@ -104,9 +104,6 @@ jhu_data = pd.concat([jhu_data.loc[:, :'Long'],
 del jhu_date_columns
 del column_names
 del updated_column_names
-
-
-
 
 
 
@@ -148,6 +145,81 @@ for index, row in apple_countries.iterrows():
 for index, df in enumerate(country_df_list):
     df.columns = ['datatype' if x == 'transportation_type'
                   else x for x in df.columns]
+
+
+# Extract Google country data into dataframe
+for country in set(google_data['country_region'].to_list()):
+
+    # Second line ensures that no duplicate city data from countries is picked up
+    country_data = google_data.loc[google_data['country_region'] == country]
+    country_data = country_data.loc[country_data['sub_region_1'] == 0]
+
+    # Seperates description information from mobility data
+    # temp: stores mobility data
+    # country_data: stores description information
+    temp = country_data.transpose().iloc[7:]
+    country_data = country_data.transpose().iloc[:7]
+    country_data = country_data.iloc[:,:6]
+    country_data = country_data.transpose()
+
+    # creates a single column dataframe
+    # will be used to label dataframe within country dataframe
+    datatypes = temp.index.values.tolist()
+    datatypes = pd.DataFrame(datatypes, columns=['datatype'])
+
+    # renames column index in temp to use date format
+    # renames row indices to be numeric
+    # this makes concatenation work later
+    temp.columns = temp.iloc[0]
+    temp = temp.drop(temp.index[0])
+    temp.index = list(range(6))
+    datatypes = datatypes.drop(datatypes.index[0])
+    datatypes.index = list(range(6))
+
+    # creates country dataframe with all information
+    # additional logic is needed to match overall column index format
+    google_country_df = pd.concat([country_data, datatypes, temp], axis=1)
+    google_country_df.rename(columns={'country_region_code':'geo_type',
+                                      'country_region':'region',
+                                      'sub_region_1':'sub-region',
+                                      'sub_region_2':'country'}, inplace=True)
+
+    # reorder columns to match country_df
+    cols = list(google_country_df.columns.values)
+    cols_reorder = ['geo_type',
+                    'region',
+                    'datatype',
+                    'sub-region',
+                    'country']
+    cols = cols_reorder + cols[8:]
+
+    google_country_df = google_country_df[cols].iloc[0:6]
+
+    # Fill NaN with 0
+    google_country_df = google_country_df.fillna(0)
+
+
+    df = google_country_df.iloc[:, 5:]
+
+    df = pd.concat([google_country_df.iloc[:, 0:6],
+                                   df.groupby(df.columns, axis=1).mean()],
+                                  axis=1)
+
+    df = df.loc[:,~df.columns.duplicated()]
+
+    # Normalize data to match apple dataset
+    numeric_cols = [col for col in df if df[col].dtype.kind != 'O']
+    df[numeric_cols] += 100
+    df['geo_type'] = "country/region"
+    df['region'] = country
+    google_country_df = df
+
+    # find matching country in country_df_list
+    # append google data to matching dataframe
+    for index, country_df in enumerate(country_df_list):
+        if country_df['region'].iloc[0].strip() == country.strip():
+            df = pd.concat([country_df, google_country_df], axis=0)
+            country_df_list[index] = df.fillna(0)
 
 
 # Adds JHU data for each country into each country's dataframe
@@ -306,7 +378,7 @@ def preprocess_data(df):
                            test_df=test_df)
 
 
-def compile_and_fit(model, window, patience=2, MAX_EPOCHS=30):
+def compile_and_fit(model, window, patience=2, MAX_EPOCHS=300):
     early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
                                                       patience=patience,
                                                       mode='min')
@@ -321,7 +393,7 @@ def compile_and_fit(model, window, patience=2, MAX_EPOCHS=30):
     return history
 
 
-df = country_df_list[0].transpose().fillna(0)[5:]
+df = country_df_list[1].transpose().fillna(0)[5:]
 print(df)
 w = preprocess_data(df)
 
@@ -343,5 +415,7 @@ gru_model = tf.keras.models.Sequential([
 ])
 
 #compile_and_fit(lstm_model, w)
-compile_and_fit(gru_model, w)
+model = compile_and_fit(gru_model, w)
 
+val_performance = lstm_model.evaluate(w.val)
+performance = lstm_model.evaluate(w.test, verbose=0)
