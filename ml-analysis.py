@@ -379,7 +379,7 @@ def preprocess_data(df):
 
 
 def compile_and_fit(model, window, patience=2, MAX_EPOCHS=300):
-    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
+    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='loss',
                                                       patience=patience,
                                                       mode='min')
 
