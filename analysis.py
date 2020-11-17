@@ -259,9 +259,9 @@ for index, df in enumerate(country_df_list):
 # Ensures that figures directory exists
 # If figure regeneration is needed,
 # it ensures that the storage directory is regenerated
-figures_path = os.path.join(os.getcwd(), 'figures')
-if not os.path.exists(figures_path):
-    os.makedirs(os.path.join(os.getcwd(),'figures'))
+results_path = os.path.join(os.getcwd(), 'results')
+if not os.path.exists(results_path):
+    os.makedirs(os.path.join(os.getcwd(),'results'))
 
 # Placed in a function for ease of multiprocessing
 def country_analysis(df):
@@ -272,7 +272,7 @@ def country_analysis(df):
     country_name = df['region'][0]
 
     # Ensures that there is a path for figures to be stored (per country)
-    country_path = os.path.join(figures_path, country_name)
+    country_path = os.path.join(results_path, country_name)
     if not os.path.exists(country_path):
         os.makedirs(country_path)
 

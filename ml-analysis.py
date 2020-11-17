@@ -388,16 +388,49 @@ def compile_and_fit(model, window, patience=2, MAX_EPOCHS=30):
                         validation_data=window.val)
     return history
 
+# Ensures that figures directory exists
+# If figure regeneration is needed,
+# it ensures that the storage directory is regenerated
+results_path = os.path.join(os.getcwd(), 'results')
+if not os.path.exists(results_path):
+    os.makedirs(os.path.join(os.getcwd(),'results'))
+
+for df in country_df_list:
+    # Ensures that NaN are set to 0
+    df = df.fillna(0)
+
+    df = country_df_list[1].transpose().fillna(0)[5:]
+    w = preprocess_data(df)
+
+    gru_model = tf.keras.models.Sequential([
+        # Shape [batch, time, features] => [batch, time, lstm_units]
+        tf.keras.layers.GRU(32, return_sequences=True),
+        tf.keras.layers.GRU(32, return_sequences=True),
+        tf.keras.layers.GRU(32, return_sequences=True),
+        tf.keras.layers.Dense(units=1000),
+        # Shape => [batch, time, features]
+        tf.keras.layers.Dense(units=1)
+    ])
+
+    compile_and_fit(gru_model, w, MAX_EPOCHS=100)
+    val_performance = gru_model.evaluate(w.train)
+    performance = gru_model.evaluate(w.test)
+
+    # Store country name for labeling
+    country_name = df['region'][0]
+
+    # Ensures that there is a path for figures to be stored (per country)
+    country_path = os.path.join(results_path, country_name)
+    if not os.path.exists(country_path):
+        os.makedirs(country_path)
+
+    model_performance_file = open(country_path + "model_performance.txt", "w+")
+    model_performance_file.write(val_performance + "\n" + performance)
+    model_performance_file.close()
+
 
 df = country_df_list[1].transpose().fillna(0)[5:]
 w = preprocess_data(df)
-
-lstm_model = tf.keras.models.Sequential([
-    # Shape [batch, time, features] => [batch, time, lstm_units]
-    tf.keras.layers.LSTM(32, return_sequences=True),
-    # Shape => [batch, time, features]
-    tf.keras.layers.Dense(units=1)
-])
 
 gru_model = tf.keras.models.Sequential([
     # Shape [batch, time, features] => [batch, time, lstm_units]
@@ -409,9 +442,9 @@ gru_model = tf.keras.models.Sequential([
     tf.keras.layers.Dense(units=1)
 ])
 
-
-#compile_and_fit(lstm_model, w)
-model = compile_and_fit(gru_model, w, MAX_EPOCHS=2000)
-
+compile_and_fit(gru_model, w, MAX_EPOCHS=100)
 val_performance = gru_model.evaluate(w.train)
 performance = gru_model.evaluate(w.test)
+
+print(val_performance)
+print(performance)
