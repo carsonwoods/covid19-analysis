@@ -427,7 +427,7 @@ for df in country_df_list:
     if not os.path.exists(country_path):
         os.makedirs(country_path)
 
-    model_performance_file = open(country_path + "model_performance.txt", "w+")
+    model_performance_file = open(country_path + country_name + "_model_performance.txt", "w+")
     model_performance_file.write(str(val_performance) + "\n" + str(performance))
     model_performance_file.close()
 
