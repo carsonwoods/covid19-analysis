@@ -372,7 +372,7 @@ def preprocess_data(df):
 
     return WindowGenerator(input_width = 28,
                            label_width = 1,
-                           shift = 10,
+                           shift = 1,
                            train_df=train_df,
                            val_df=val_df,
                            test_df=test_df)
