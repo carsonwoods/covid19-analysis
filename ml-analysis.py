@@ -428,6 +428,6 @@ for df in country_df_list:
         os.makedirs(country_path)
 
     model_performance_file = open(country_path + "model_performance.txt", "w+")
-    model_performance_file.write(val_performance + "\n" + performance)
+    model_performance_file.write(str(val_performance) + "\n" + str(performance))
     model_performance_file.close()
 
