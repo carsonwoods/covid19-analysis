@@ -355,9 +355,9 @@ def preprocess_data(df):
     """
     column_indices = {name: i for i, name in enumerate(df.columns)}
     n = len(df)
-    train_df = df[0:int(n*0.5)]
-    val_df = df[int(n*0.5):int(n*0.9)]
-    test_df = df[int(n*0.9):]
+    train_df = df[0:int(n*0.8)]
+    val_df = df[int(n*0.5):int(n*0.7)]
+    test_df = df[int(n*0.7):]
 
     # Perform Data Normalization
     train_mean = train_df.mean()
@@ -372,24 +372,23 @@ def preprocess_data(df):
 
     return WindowGenerator(input_width = 28,
                            label_width = 1,
-                           shift = 28,
+                           shift = 10,
                            train_df=train_df,
                            val_df=val_df,
                            test_df=test_df)
 
 
 def compile_and_fit(model, window, patience=2, MAX_EPOCHS=30):
-    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
-                                                      patience=patience,
-                                                      mode='min')
+    # early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
+    #                                                   patience=patience,
+    #                                                   mode='min')
 
     model.compile(loss=tf.losses.MeanSquaredError(),
                   optimizer=tf.optimizers.Adam(),
                   metrics=[tf.metrics.MeanAbsoluteError()])
 
     history = model.fit(window.train, epochs=MAX_EPOCHS,
-                        validation_data=window.val,
-                        callbacks=[early_stopping])
+                        validation_data=window.val)
     return history
 
 
@@ -418,4 +417,4 @@ gru_model = tf.keras.models.Sequential([
 model = compile_and_fit(gru_model, w)
 
 val_performance = gru_model.evaluate(w.train)
-#performance = gru_model.evaluate(w.test, verbose=0)
+performance = gru_model.evaluate(w.test)
