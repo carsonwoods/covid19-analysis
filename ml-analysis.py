@@ -370,18 +370,15 @@ def preprocess_data(df):
 
     num_features = df.shape[1]
 
-    return WindowGenerator(input_width = 28,
+    return WindowGenerator(input_width = 18,
                            label_width = 1,
-                           shift = 1,
+                           shift = 7,
                            train_df=train_df,
                            val_df=val_df,
                            test_df=test_df)
 
 
 def compile_and_fit(model, window, patience=2, MAX_EPOCHS=30):
-    # early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
-    #                                                   patience=patience,
-    #                                                   mode='min')
 
     model.compile(loss=tf.losses.MeanSquaredError(),
                   optimizer=tf.optimizers.Adam(),
@@ -414,7 +411,7 @@ gru_model = tf.keras.models.Sequential([
 
 
 #compile_and_fit(lstm_model, w)
-model = compile_and_fit(gru_model, w)
+model = compile_and_fit(gru_model, w, MAX_EPOCHS=2000)
 
 val_performance = gru_model.evaluate(w.train)
 performance = gru_model.evaluate(w.test)
