@@ -385,7 +385,8 @@ def compile_and_fit(model, window, patience=2, MAX_EPOCHS=30):
                   metrics=[tf.metrics.MeanAbsoluteError()])
 
     history = model.fit(window.train, epochs=MAX_EPOCHS,
-                        validation_data=window.val)
+                        validation_data=window.val,
+                        verbose=0)
     return history
 
 # Ensures that figures directory exists
@@ -418,8 +419,8 @@ for df in country_df_list:
     ])
 
     compile_and_fit(gru_model, w, MAX_EPOCHS=100)
-    val_performance = gru_model.evaluate(w.train)
-    performance = gru_model.evaluate(w.test)
+    val_performance = gru_model.evaluate(w.train, verbose=0)
+    performance = gru_model.evaluate(w.test, verbose=0)
 
     # Ensures that there is a path for figures to be stored (per country)
     country_path = os.path.join(results_path, country_name)
