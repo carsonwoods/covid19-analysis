@@ -417,6 +417,7 @@ for df in country_df_list:
     performance = gru_model.evaluate(w.test)
 
     # Store country name for labeling
+    print(df.head())
     country_name = df['region'][0]
 
     # Ensures that there is a path for figures to be stored (per country)

@@ -208,7 +208,7 @@ for country in set(google_data['country_region'].to_list()):
     # append google data to matching dataframe
     for index, country_df in enumerate(country_df_list):
         if country_df['region'].iloc[0].strip() == country.strip():
-            df = pd.concat([country_df, google_country_df], axis=0)
+            df = pd.concat([country_df, google_country_df], axis=0, sort=True)
             country_df_list[index] = df.fillna(0)
 
 
