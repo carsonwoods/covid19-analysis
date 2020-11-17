@@ -419,8 +419,8 @@ for df in country_df_list:
     ])
 
     compile_and_fit(gru_model, w, MAX_EPOCHS=100)
-    val_performance = gru_model.evaluate(w.train, verbose=0)
-    performance = gru_model.evaluate(w.test, verbose=0)
+    val_performance = str(gru_model.evaluate(w.train, verbose=0))
+    performance = str(gru_model.evaluate(w.test, verbose=0))
 
     # Ensures that there is a path for figures to be stored (per country)
     country_path = os.path.join(results_path, country_name)
@@ -428,6 +428,7 @@ for df in country_df_list:
         os.makedirs(country_path)
 
     model_performance_file = open(country_path + country_name + "_model_performance.txt", "w+")
-    model_performance_file.write(str(val_performance) + "\n" + str(performance))
+    model_performance_file.write("Val Performance: " + val_performance + "\n" )
+    model_performance_file.write("Performance " + performacne + "\n")
     model_performance_file.close()
 
