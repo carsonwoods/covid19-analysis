@@ -429,6 +429,6 @@ for df in country_df_list:
 
     model_performance_file = open(country_path + "/country_name + "_model_performance.txt", "w+")
     model_performance_file.write("Val Performance: " + val_performance + "\n" )
-    model_performance_file.write("Performance " + performacne + "\n")
+    model_performance_file.write("Performance: " + performance + "\n")
     model_performance_file.close()
 
