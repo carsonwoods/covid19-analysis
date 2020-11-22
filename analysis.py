@@ -1,4 +1,5 @@
 import os
+import copy
 from datetime import datetime
 from multiprocessing import Process
 
@@ -280,12 +281,15 @@ def country_analysis(df):
     # Converts df rows to lists for easier operations
     date_list = df.columns.values.tolist()[5:]
     covid_data = df.loc[df['datatype'] == 'covid'].iloc[0].tolist()[5:]
-    covid_data_copy = covid_data
+    covid_data_copy = copy.deepcopy(covid_data)
     driving_data = df.loc[df['datatype'] == 'driving'].iloc[0].tolist()[5:]
     walking_data = df.loc[df['datatype'] == 'walking'].iloc[0].tolist()[5:]
     if 'residential_percent_change_from_baseline' in df.values:
         residential_data = df.loc[df['datatype'] == 'residential_percent_change_from_baseline'].iloc[0].tolist()[5:]
         workplace_data = df.loc[df['datatype'] == 'workplaces_percent_change_from_baseline'].iloc[0].tolist()[5:]
+
+    driving_data = driving_data[:len(covid_data)]
+    walking_data = walking_data[:len(covid_data)]
 
     for idx, x in enumerate(driving_data):
         if not isinstance(x, float):

@@ -2,6 +2,7 @@
 # https://www.tensorflow.org/tutorials/structured_data/time_series#normalize_the_data
 
 import os
+import copy
 from datetime import datetime
 from multiprocessing import Process
 
