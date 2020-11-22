@@ -314,8 +314,8 @@ def country_analysis(df):
         residential_model = LinearRegression().fit(np.array(residential_data).reshape(-1, 1), np.array(covid_data))
         workplace_model = LinearRegression().fit(np.array(workplace_data).reshape(-1, 1), np.array(covid_data))
 
-        residential_score = driving_model.score(np.array(residential_data).reshape(-1, 1), np.array(covid_data))
-        workplace_score = driving_model.score(np.array(workplace_data).reshape(-1, 1), np.array(covid_data))
+        residential_score = residential_model.score(np.array(residential_data).reshape(-1, 1), np.array(covid_data))
+        workplace_score = workplace_model.score(np.array(workplace_data).reshape(-1, 1), np.array(covid_data))
 
         regression_results_file.write("Residential Regression Performance: " + str(residential_score) + "\n")
         regression_results_file.write("Workplace Regression Performance: " + str(workplace_score) + "\n")
