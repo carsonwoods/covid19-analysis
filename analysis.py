@@ -286,13 +286,14 @@ def country_analysis(df):
         residential_data = df.loc[df['datatype'] == 'residential_percent_change_from_baseline'].iloc[0].tolist()[5:]
         workplace_data = df.loc[df['datatype'] == 'workplaces_percent_change_from_baseline'].iloc[0].tolist()[5:]
 
-
+    driving_data = [ x for x in driving_data if x.isdigit() ]
+    walking_data = [ x for x in walking_data if x.isdigit() ]
 
     driving_model = LinearRegression()
     walking_model = LinearRegression()
 
-    driving_model.fit(np.array(driving_data), np.array(covid_data))
-    walking_model.fit(np.array(walking_data), np.array(covid_data))
+    driving_model.fit(np.array(driving_data).reshape(-1, 1), np.array(covid_data))
+    walking_model.fit(np.array(walking_data).reshape(-1, 1), np.array(covid_data))
 
     driving_score = driving_model.score()
     walking_score = walking_model.score()
