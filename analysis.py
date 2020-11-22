@@ -5,6 +5,7 @@ from multiprocessing import Process
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
 
 
 #################
@@ -284,6 +285,20 @@ def country_analysis(df):
     if 'residential_percent_change_from_baseline' in df.values:
         residential_data = df.loc[df['datatype'] == 'residential_percent_change_from_baseline'].iloc[0].tolist()[5:]
         workplace_data = df.loc[df['datatype'] == 'workplaces_percent_change_from_baseline'].iloc[0].tolist()[5:]
+
+
+
+    driving_model = LinearRegression()
+    walking_model = LinearRegression()
+
+    driving_model.fit(np.array(driving_data).reshape(1,-1),np.array(covid_data))
+    walking_model.fit(np.array(walking_data).reshape(1,-1),np.array(covid_data))
+
+    driving_score = driving_model.score()
+    walking_score = walking_model.score()
+
+    print(country_name + ": " + driving_score + " " + walking_score)
+
 
     # The data was initially too messy to interpret, and without
     # normalization it was useless. This takes average values over 7 day
