@@ -286,8 +286,8 @@ def country_analysis(df):
         residential_data = df.loc[df['datatype'] == 'residential_percent_change_from_baseline'].iloc[0].tolist()[5:]
         workplace_data = df.loc[df['datatype'] == 'workplaces_percent_change_from_baseline'].iloc[0].tolist()[5:]
 
-    driving_data = [ x for x in driving_data if x.isdigit() ]
-    walking_data = [ x for x in walking_data if x.isdigit() ]
+    driving_data = [ x for x in driving_data if isinstance(x, float) ]
+    walking_data = [ x for x in walking_data if isinstance(x, float) ]
 
     driving_model = LinearRegression()
     walking_model = LinearRegression()
