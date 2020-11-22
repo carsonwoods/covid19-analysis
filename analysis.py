@@ -1,5 +1,4 @@
 import os
-import copy
 from datetime import datetime
 from multiprocessing import Process
 
@@ -281,31 +280,21 @@ def country_analysis(df):
     # Converts df rows to lists for easier operations
     date_list = df.columns.values.tolist()[5:]
     covid_data = df.loc[df['datatype'] == 'covid'].iloc[0].tolist()[5:]
-    covid_data_copy = copy.deepcopy(covid_data)
     driving_data = df.loc[df['datatype'] == 'driving'].iloc[0].tolist()[5:]
     walking_data = df.loc[df['datatype'] == 'walking'].iloc[0].tolist()[5:]
     if 'residential_percent_change_from_baseline' in df.values:
         residential_data = df.loc[df['datatype'] == 'residential_percent_change_from_baseline'].iloc[0].tolist()[5:]
         workplace_data = df.loc[df['datatype'] == 'workplaces_percent_change_from_baseline'].iloc[0].tolist()[5:]
 
-    driving_data = driving_data[:len(covid_data)]
-    walking_data = walking_data[:len(covid_data)]
-
-    for idx, x in enumerate(driving_data):
-        if not isinstance(x, float):
-            del driving_data[idx]
-            del covid_data[idx]
-
-    for idx, x in enumerate(walking_data):
-        if not isinstance(x, float):
-            del walking_data[idx]
-            del covid_data_copy[idx]
-
+    driving_data = driving_data[:200]
+    walking_data = walking_data[:200]
+    covid_data = covid_data[:200]
+    
     driving_model = LinearRegression()
     walking_model = LinearRegression()
 
     driving_model.fit(np.array(driving_data).reshape(-1, 1), np.array(covid_data))
-    walking_model.fit(np.array(walking_data).reshape(-1, 1), np.array(covid_data_copy))
+    walking_model.fit(np.array(walking_data).reshape(-1, 1), np.array(covid_data))
 
     driving_score = driving_model.score()
     walking_score = walking_model.score()
