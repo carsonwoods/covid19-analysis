@@ -297,14 +297,11 @@ def country_analysis(df):
             del walking_data[idx]
             del covid_data_copy[idx]
 
-    driving_data = [ x for x in driving_data if isinstance(x, float) ]
-    walking_data = [ x for x in walking_data if isinstance(x, float) ]
-
     driving_model = LinearRegression()
     walking_model = LinearRegression()
 
     driving_model.fit(np.array(driving_data).reshape(-1, 1), np.array(covid_data))
-    walking_model.fit(np.array(walking_data).reshape(-1, 1), np.array(covid_data))
+    walking_model.fit(np.array(walking_data).reshape(-1, 1), np.array(covid_data_copy))
 
     driving_score = driving_model.score()
     walking_score = walking_model.score()
