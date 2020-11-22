@@ -291,8 +291,8 @@ def country_analysis(df):
     driving_model = LinearRegression()
     walking_model = LinearRegression()
 
-    driving_model.fit(np.array(driving_data).reshape(1,-1),np.array(covid_data))
-    walking_model.fit(np.array(walking_data).reshape(1,-1),np.array(covid_data))
+    driving_model.fit(np.array(driving_data), np.array(covid_data))
+    walking_model.fit(np.array(walking_data), np.array(covid_data))
 
     driving_score = driving_model.score()
     walking_score = walking_model.score()
