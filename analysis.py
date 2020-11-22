@@ -301,8 +301,8 @@ def country_analysis(df):
 
     print(country_name + ": " + str(driving_score) + " " + str(walking_score))
     regression_results_file = open(country_path + "/" + country_name + "_regression_performance.txt", "w+")
-    regression_results_file.write("Driving Regression Performance: " + driving_score + "\n" )
-    regression_results_file.write("Driving Regression Performance: " + walking_score + "\n")
+    regression_results_file.write("Driving Regression Performance: " + str(driving_score) + "\n" )
+    regression_results_file.write("Walking Regression Performance: " + str(walking_score) + "\n")
     regression_results_file.close()
 
 
