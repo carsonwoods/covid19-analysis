@@ -270,7 +270,7 @@ def country_analysis(df):
     df = df.fillna(0)
 
     # Store country name for labeling
-    country_name = df['region'][0].strip([' ', '\''])
+    country_name = df['region'][0].strip("' ")
 
     # Ensures that there is a path for figures to be stored (per country)
     country_path = os.path.join(results_path, country_name)
