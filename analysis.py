@@ -289,15 +289,15 @@ def country_analysis(df):
     driving_data = driving_data[:200]
     walking_data = walking_data[:200]
     covid_data = covid_data[:200]
-    
+
     driving_model = LinearRegression()
     walking_model = LinearRegression()
 
     driving_model.fit(np.array(driving_data).reshape(-1, 1), np.array(covid_data))
     walking_model.fit(np.array(walking_data).reshape(-1, 1), np.array(covid_data))
 
-    driving_score = driving_model.score()
-    walking_score = walking_model.score()
+    driving_score = driving_model.score(np.array(driving_data).reshape(-1, 1), np.array(covid_data))
+    walking_score = walking_model.score(np.array(walking_data).reshape(-1, 1), np.array(covid_data))
 
     print(country_name + ": " + driving_score + " " + walking_score)
     regression_results_file = open(country_path + "/" + country_name + "/" +country_name + "_regression_performance.txt", "w+")
