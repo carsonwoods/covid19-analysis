@@ -289,6 +289,9 @@ def country_analysis(df):
     driving_data = driving_data[:200]
     walking_data = walking_data[:200]
     covid_data = covid_data[:200]
+    if 'residential_percent_change_from_baseline' in df.values:
+        residential_data = residential_data[:200]
+        workplace_data = workplace_data[:200]
 
     driving_model = LinearRegression()
     walking_model = LinearRegression()
@@ -303,6 +306,20 @@ def country_analysis(df):
     regression_results_file = open(country_path + "/" + country_name + "_regression_performance.txt", "w+")
     regression_results_file.write("Driving Regression Performance: " + str(driving_score) + "\n" )
     regression_results_file.write("Walking Regression Performance: " + str(walking_score) + "\n")
+
+    if 'residential_percent_change_from_baseline' in df.values:
+        residential_data = residential_data[:200]
+        workplace_data = workplace_data[:200]
+
+        residential_model = LinearRegression().fit(np.array(residential_data).reshape(-1, 1), np.array(covid_data))
+        workplace_model = LinearRegression().fit(np.array(workplace_data).reshape(-1, 1), np.array(covid_data))
+
+        residential_score = driving_model.score(np.array(residential_data).reshape(-1, 1), np.array(covid_data))
+        workplace_score = driving_model.score(np.array(workplace_data).reshape(-1, 1), np.array(covid_data))
+
+        regression_results_file.write("Residential Regression Performance: " + str(residential_score) + "\n")
+        regression_results_file.write("Workplace Regression Performance: " + str(workplace_score) + "\n")
+
     regression_results_file.close()
 
 
