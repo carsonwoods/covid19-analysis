@@ -426,3 +426,24 @@ for df in country_df_list:
     processes.append(p)
 for p in processes:
     p.join()
+
+driving_average = 0
+walking_average = 0
+count = 0
+
+for root, subdirs, files in os.walk('./results/'):
+    for file in files:
+        if file.endswith("regression_performance.txt"):
+            count += 1
+            with open(os.path.join(root, file), "r") as file:
+                line = fp.readline()
+                while line:
+                    line = line.split()
+                    if 'Driving' in line:
+                        driving_average += float(line[-1])
+                    elif 'Walking' in line:
+                        walking_average += float(line[-1])
+                    line = fp.readline()
+
+print("Driving Average: " + str(driving_average/count))
+print("Walking Average: " + str(walking_average/count))
