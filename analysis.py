@@ -437,7 +437,7 @@ for root, subdirs, files in os.walk('./results/'):
     for file in files:
         if file.endswith("regression_performance.txt"):
             count += 1
-            with open(os.path.join(root, file), "r") as file:
+            with open(os.path.join(root, file), "r") as fp:
                 line = fp.readline()
                 while line:
                     line = line.split()
@@ -451,7 +451,7 @@ for root, subdirs, files in os.walk('./results/'):
                         workplace_average += float(line[-1])
                     line = fp.readline()
 
-print("Driving Average: " + str(driving_average/count))
+print("\nDriving Average: " + str(driving_average/count))
 print("Walking Average: " + str(walking_average/count))
 print("Residential Average: " + str(residential_average/count))
 print("Workplace Average: " + str(workplace_average/count))
