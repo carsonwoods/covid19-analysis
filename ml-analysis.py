@@ -458,6 +458,8 @@ for df in country_df_list:
 
     model_performance_file = open(country_path + "/" + country_name + "_model_performance.txt", "w+")
 
+    model.write("Results Format: " + str(gru_model.metrics_names) + "\n")
+
     model_performance_file.write("RNN_MODEL:\n")
     model_performance_file.write("Val Performance: " + rnn_val_performance + "\n" )
     model_performance_file.write("Performance: " + rnn_performance + "\n\n\n")
