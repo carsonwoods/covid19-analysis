@@ -320,7 +320,7 @@ def country_analysis(df):
         regression_results_file.write("Residential Regression Performance: " + str(residential_score) + "\n")
         regression_results_file.write("Workplace Regression Performance: " + str(workplace_score) + "\n")
 
-        print(country_name + ": \n\tResidential: " + str(residential_score) + "\n\tWorkplace: " + str(workplace_score))
+        print("\tResidential: " + str(residential_score) + "\n\tWorkplace: " + str(workplace_score))
 
     regression_results_file.close()
 
