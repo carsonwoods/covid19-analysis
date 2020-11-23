@@ -409,19 +409,47 @@ for df in country_df_list:
 
     w = preprocess_data(df.transpose().fillna(0)[5:])
 
-    gru_model = tf.keras.models.Sequential([
+    rnn_model = tf.keras.models.Sequential([
         # Shape [batch, time, features] => [batch, time, lstm_units]
-        tf.keras.layers.GRU(32, return_sequences=True),
-        tf.keras.layers.GRU(32, return_sequences=True),
-        tf.keras.layers.GRU(32, return_sequences=True),
-        tf.keras.layers.Dense(units=1000),
+        tf.keras.layers.RNN(32, return_sequences=True),
+        #tf.keras.layers.GRU(32, return_sequences=True),
+        #tf.keras.layers.GRU(32, return_sequences=True),
+        #tf.keras.layers.Dense(units=1000),
         # Shape => [batch, time, features]
         tf.keras.layers.Dense(units=1)
     ])
 
-    compile_and_fit(gru_model, w, MAX_EPOCHS=100)
-    val_performance = str(gru_model.evaluate(w.train, verbose=0))
-    performance = str(gru_model.evaluate(w.test, verbose=0))
+    compile_and_fit(rnn_model, w, MAX_EPOCHS=500)
+    rnn_val_performance = str(rnn_model.evaluate(w.train, verbose=0))
+    rnn_performance = str(rnn_model.evaluate(w.test, verbose=0))
+
+    lstm_model = tf.keras.models.Sequential([
+        # Shape [batch, time, features] => [batch, time, lstm_units]
+        tf.keras.layers.LSTM(32, return_sequences=True),
+        #tf.keras.layers.GRU(32, return_sequences=True),
+        #tf.keras.layers.GRU(32, return_sequences=True),
+        #tf.keras.layers.Dense(units=1000),
+        # Shape => [batch, time, features]
+        tf.keras.layers.Dense(units=1)
+    ])
+
+    compile_and_fit(lstm_model, w, MAX_EPOCHS=500)
+    lstm_val_performance = str(lstm_model.evaluate(w.train, verbose=0))
+    lstm_performance = str(lstm_model.evaluate(w.test, verbose=0))
+
+    gru_model = tf.keras.models.Sequential([
+        # Shape [batch, time, features] => [batch, time, lstm_units]
+        tf.keras.layers.GRU(32, return_sequences=True),
+        #tf.keras.layers.GRU(32, return_sequences=True),
+        #tf.keras.layers.GRU(32, return_sequences=True),
+        #tf.keras.layers.Dense(units=1000),
+        # Shape => [batch, time, features]
+        tf.keras.layers.Dense(units=1)
+    ])
+
+    compile_and_fit(gru_model, w, MAX_EPOCHS=500)
+    gru_val_performance = str(gru_model.evaluate(w.train, verbose=0))
+    gru_performance = str(gru_model.evaluate(w.test, verbose=0))
 
     # Ensures that there is a path for figures to be stored (per country)
     country_path = os.path.join(results_path, country_name)
@@ -429,7 +457,18 @@ for df in country_df_list:
         os.makedirs(country_path)
 
     model_performance_file = open(country_path + "/" + country_name + "_model_performance.txt", "w+")
-    model_performance_file.write("Val Performance: " + val_performance + "\n" )
-    model_performance_file.write("Performance: " + performance + "\n")
+
+    model_performance.write("RNN_MODEL:\n")
+    model_performance_file.write("Val Performance: " + rnn_val_performance + "\n" )
+    model_performance_file.write("Performance: " + rnn_performance + "\n\n\n")
+
+    model_performance.write("LSTM_MODEL:\n")
+    model_performance_file.write("Val Performance: " + lstm_val_performance + "\n" )
+    model_performance_file.write("Performance: " + lstm_performance + "\n\n\n")
+
+    model_performance.write("GRU_MODEL:\n")
+    model_performance_file.write("Val Performance: " + gru_val_performance + "\n" )
+    model_performance_file.write("Performance: " + gru_performance + "\n\n\n")
+
     model_performance_file.close()
 
