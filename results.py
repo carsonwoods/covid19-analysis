@@ -39,9 +39,11 @@ for root, subdirs, files in os.walk('./results/'):
                 while line:
                     line = line.split()
                     if 'Val' in line:
+                        ml_count += 1
                         val_loss_average += float(line[1].strip("[], "))
                         val_mean_sq_loss += float(line[2].strip("[], "))
                     elif 'Val' not in line and 'Performance' in line:
+                        ml_count += 1
                         perf_loss_average += float(line[1].strip("[], "))
                         perf_mean_sq_loss += float(line[2].strip("[], "))
                     line = fp.readline()
