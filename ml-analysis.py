@@ -462,15 +462,15 @@ for df in country_df_list:
 
     model_performance_file.write("RNN_MODEL:\n")
     model_performance_file.write("Val Performance: " + rnn_val_performance + "\n" )
-    model_performance_file.write("Performance: " + rnn_performance + "\n\n\n")
+    model_performance_file.write("Performance: " + rnn_performance + "\n\n")
 
     model_performance_file.write("LSTM_MODEL:\n")
     model_performance_file.write("Val Performance: " + lstm_val_performance + "\n" )
-    model_performance_file.write("Performance: " + lstm_performance + "\n\n\n")
+    model_performance_file.write("Performance: " + lstm_performance + "\n\n")
 
     model_performance_file.write("GRU_MODEL:\n")
     model_performance_file.write("Val Performance: " + gru_val_performance + "\n" )
-    model_performance_file.write("Performance: " + gru_performance + "\n\n\n")
+    model_performance_file.write("Performance: " + gru_performance)
 
     model_performance_file.close()
 
