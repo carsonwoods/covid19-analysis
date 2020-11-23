@@ -411,7 +411,7 @@ for df in country_df_list:
 
     rnn_model = tf.keras.models.Sequential([
         # Shape [batch, time, features] => [batch, time, lstm_units]
-        tf.keras.layers.RNN(32, return_sequences=True),
+        tf.keras.layers.SimpleRNN(128),
         #tf.keras.layers.GRU(32, return_sequences=True),
         #tf.keras.layers.GRU(32, return_sequences=True),
         #tf.keras.layers.Dense(units=1000),
