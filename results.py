@@ -59,13 +59,13 @@ for root, subdirs, files in os.walk('./results/'):
                         model_type = 'gru'
                     elif 'Val' in line:
                         ml_count += 1
-                        if model_type = 'rnn':
+                        if model_type == 'rnn':
                             rnn_val_loss_average += float(line[1].strip("[], "))
                             rnn_val_mean_sq_loss += float(line[2].strip("[], "))
-                        elif model_type = 'lstm':
+                        elif model_type == 'lstm':
                             lstm_val_loss_average += float(line[1].strip("[], "))
                             lstm_val_mean_sq_loss += float(line[2].strip("[], "))
-                        elif model_type = 'gru':
+                        elif model_type == 'gru':
                             gru_val_loss_average += float(line[1].strip("[], "))
                             gru_val_mean_sq_loss += float(line[2].strip("[], "))
                     elif 'Val' not in line and 'Performance' in line:
