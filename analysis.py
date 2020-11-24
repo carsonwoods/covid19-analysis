@@ -234,16 +234,17 @@ for index, row in jhu_data.iterrows():
     # Searches for matching country dataframe
     for index, df in enumerate(country_df_list):
         if df['region'].iloc[0].strip() == country_name:
-            new_index = ['geo_type',
-                         'region',
-                         'datatype',
-                         'sub-region',
-                         'country']
-            new_index.extend(list(row.index.values[5:]))
-            row.index = new_index
-            modified_df = country_df_list[index].append(row,
-                                                        ignore_index=True)
-            country_df_list[index] = modified_df
+            if subregion_name == "nan":
+                new_index = ['geo_type',
+                             'region',
+                             'datatype',
+                             'sub-region',
+                             'country']
+                new_index.extend(list(row.index.values[5:]))
+                row.index = new_index
+                modified_df = country_df_list[index].append(row,
+                                                            ignore_index=True)
+                country_df_list[index] = modified_df
 
 # Filter out countries that are lacking covid data
 for index, df in enumerate(country_df_list):
@@ -415,7 +416,6 @@ def country_analysis(df):
         fig.savefig(os.path.join(country_path, file_name))
         plt.clf()
         plt.close()
-
 
 # Parallelism to ensure that analysis and graph
 # generation isn't prohibitively time consuming.
