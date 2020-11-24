@@ -1,5 +1,7 @@
 # Script to Analyze Results
 
+import os
+
 driving_average = 0
 walking_average = 0
 residential_average = 0
@@ -7,10 +9,20 @@ workplace_average = 0
 apple_count = 0
 google_count = 0
 
-val_loss_average = 0
-perf_loss_average = 0
-val_mean_sq_loss = 0
-perf_mean_sq_loss = 0
+rnn_val_loss_average = 0
+rnn_perf_loss_average = 0
+rnn_val_mean_sq_loss = 0
+rnn_perf_mean_sq_loss = 0
+
+lstm_val_loss_average = 0
+lstm_perf_loss_average = 0
+lstm_val_mean_sq_loss = 0
+lstm_perf_mean_sq_loss = 0
+
+gru_val_loss_average = 0
+gru_perf_loss_average = 0
+gru_val_mean_sq_loss = 0
+gru_perf_mean_sq_loss = 0
 
 
 for root, subdirs, files in os.walk('./results/'):
@@ -38,14 +50,29 @@ for root, subdirs, files in os.walk('./results/'):
                 line = fp.readline()
                 while line:
                     line = line.split()
-                    if 'Val' in line:
+                    model_type = None
+                    if 'RNN_MODEL:' in line:
+                        model_type = 'rnn'
+                    elif 'LSTM_MODEL:' in line:
+                        model_type = 'lstm'
+                    elif 'GRN_MODEL:' in line:
+                        model_type = 'gru'
+                    elif 'Val' in line:
                         ml_count += 1
-                        val_loss_average += float(line[1].strip("[], "))
-                        val_mean_sq_loss += float(line[2].strip("[], "))
+                        if model_type = 'rnn':
+                            rnn_val_loss_average += float(line[1].strip("[], "))
+                            rnn_val_mean_sq_loss += float(line[2].strip("[], "))
+                        elif model_type = 'lstm':
+                            lstm_val_loss_average += float(line[1].strip("[], "))
+                            lstm_val_mean_sq_loss += float(line[2].strip("[], "))
+                        elif model_type = 'gru':
+                            gru_val_loss_average += float(line[1].strip("[], "))
+                            gru_val_mean_sq_loss += float(line[2].strip("[], "))
                     elif 'Val' not in line and 'Performance' in line:
                         ml_count += 1
                         perf_loss_average += float(line[1].strip("[], "))
                         perf_mean_sq_loss += float(line[2].strip("[], "))
+
                     line = fp.readline()
 
 print("REGRESSION AVERAGES:")
