@@ -9,6 +9,11 @@ workplace_average = 0
 apple_count = 0
 google_count = 0
 
+driving_p = 0
+walking_p = 0
+residential_p = 0
+workplace_p = 0
+
 rnn_val_loss_average = 0
 rnn_perf_loss_average = 0
 rnn_val_mean_sq_loss = 0
@@ -33,16 +38,32 @@ for root, subdirs, files in os.walk('./results/'):
                 line = fp.readline()
                 while line:
                     line = line.split()
-                    if 'Driving' in line:
+                    if 'Driving Regression Performance:' in line:
                         apple_count += 1
                         driving_average += float(line[-1])
-                    elif 'Walking' in line:
+                    elif 'Walking Regression Performance:' in line:
                         walking_average += float(line[-1])
-                    elif 'Residential' in line:
+                    elif 'Residential Regression Performance:' in line:
                         google_count += 1
                         residential_average += float(line[-1])
-                    elif 'Workplace' in line:
+                    elif 'Workplace Regression Performance:' in line:
                         workplace_average += float(line[-1])
+                    elif 'Driving Regression Summary' in line:
+                        for x in range(15)
+                            line = fp.readline()
+                        driving_p += float(line.split()[4].strip())
+                    elif 'Walking Regression Summary' in line:
+                        for x in range(15)
+                            line = fp.readline()
+                        walking_p += float(line.split()[4].strip())
+                    elif 'Residential Regression Summary' in line:
+                        for x in range(15)
+                            line = fp.readline()
+                        residential_p += float(line.split()[4].strip())
+                    elif 'Workplace Regression Summary' in line:
+                        for x in range(15)
+                            line = fp.readline()
+                        workplace_p += float(line.split()[4].strip())
                     line = fp.readline()
 
         if file.endswith('model_performance.txt'):
@@ -85,6 +106,12 @@ print("Driving Average: " + str(driving_average/apple_count))
 print("Walking Average: " + str(walking_average/apple_count))
 print("Residential Average: " + str(residential_average/google_count))
 print("Workplace Average: " + str(workplace_average/google_count))
+
+print("P-VALUE AVERAGES:")
+print("Driving Average: " + str(driving_p/apple_count))
+print("Walking Average: " + str(walking_p/apple_count))
+print("Residential Average: " + str(residential_p/google_count))
+print("Workplace Average: " + str(workplace_p/google_count))
 
 print("\nML AVERAGES:")
 print("RNN Validation Loss Average:" + str(rnn_val_loss_average/ml_count))
