@@ -315,8 +315,8 @@ def country_analysis(df):
     regression_results_file = open(country_path + "/" + country_name + "_regression_performance.txt", "w+")
     regression_results_file.write("Driving Regression Performance: " + str(driving_score) + "\n" )
     regression_results_file.write("Walking Regression Performance: " + str(walking_score) + "\n")
-    regression_results_file.write("Driving Regression Summary:\n" + driving_model_test.summary())
-    regression_results_file.write("Walking Regression Summary:\n" + walking_model_test.summary())
+    regression_results_file.write("Driving Regression Summary:\n" + str(driving_model_test.summary()))
+    regression_results_file.write("Walking Regression Summary:\n" + str(walking_model_test.summary()))
 
 
     if 'residential_percent_change_from_baseline' in df.values:
@@ -334,8 +334,8 @@ def country_analysis(df):
 
         regression_results_file.write("Residential Regression Performance: " + str(residential_score) + "\n")
         regression_results_file.write("Workplace Regression Performance: " + str(workplace_score) + "\n")
-        regression_results_file.write("Residential Regression Summary:\n" + residential_model_test.summary())
-        regression_results_file.write("Workplace Regression Summary:\n" + workplace_model_test.summary())
+        regression_results_file.write("Residential Regression Summary:\n" + str(residential_model_test.summary()))
+        regression_results_file.write("Workplace Regression Summary:\n" + str(workplace_model_test.summary()))
 
     regression_results_file.close()
 
