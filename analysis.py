@@ -305,9 +305,6 @@ def country_analysis(df):
     driving_model_test = sm.OLS(covid_data, sm.add_constant(driving_data)).fit()
     walking_model_test = sm.OLS(covid_data, sm.add_constant(walking_data)).fit()
 
-
-    print(driving_model_test.summary())
-
     driving_score = driving_model.score(np.array(driving_data).reshape(-1, 1), np.array(covid_data))
     walking_score = walking_model.score(np.array(walking_data).reshape(-1, 1), np.array(covid_data))
 
