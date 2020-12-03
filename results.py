@@ -49,19 +49,19 @@ for root, subdirs, files in os.walk('./results/'):
                     elif 'Workplace Regression Performance:' in line:
                         workplace_average += float(line[-1])
                     elif 'Driving Regression Summary' in line:
-                        for x in range(15)
+                        for x in range(15):
                             line = fp.readline()
                         driving_p += float(line.split()[4].strip())
                     elif 'Walking Regression Summary' in line:
-                        for x in range(15)
+                        for x in range(15):
                             line = fp.readline()
                         walking_p += float(line.split()[4].strip())
                     elif 'Residential Regression Summary' in line:
-                        for x in range(15)
+                        for x in range(15):
                             line = fp.readline()
                         residential_p += float(line.split()[4].strip())
                     elif 'Workplace Regression Summary' in line:
-                        for x in range(15)
+                        for x in range(15):
                             line = fp.readline()
                         workplace_p += float(line.split()[4].strip())
                     line = fp.readline()
