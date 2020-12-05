@@ -31,39 +31,52 @@ gru_perf_mean_sq_loss = 0
 
 ml_count = 0
 
+results = dict()
+
 for root, subdirs, files in os.walk('./results/'):
     for file in files:
         if file.endswith("regression_performance.txt"):
+            country = file.split("_")[0].strip()
+            results[country] = dict()
             with open(os.path.join(root, file), "r") as fp:
                 line = fp.readline()
                 while line:
+                    unsplit_line = line
                     line = line.split()
-                    if 'Driving Regression Performance:' in line:
+                    if 'Driving Regression Performance:' in unsplit_line:
                         apple_count += 1
                         driving_average += float(line[-1])
-                    elif 'Walking Regression Performance:' in line:
+                        results[country]['driving_r_sq'] = float(line[-1])
+                    elif 'Walking Regression Performance:' in unsplit_line:
                         walking_average += float(line[-1])
-                    elif 'Residential Regression Performance:' in line:
+                        results[country]['walking_r_sq'] = float(line[-1])
+                    elif 'Residential Regression Performance:' in unsplit_line:
                         google_count += 1
                         residential_average += float(line[-1])
-                    elif 'Workplace Regression Performance:' in line:
+                        results[country]['residential_r_sq'] = float(line[-1])
+                    elif 'Workplace Regression Performance:' in unsplit_line:
                         workplace_average += float(line[-1])
-                    elif 'Driving Regression Summary' in line:
+                        results[country]['workplace_r_sq'] = float(line[-1])
+                    elif 'Driving Regression Summary' in unsplit_line:
                         for x in range(15):
                             line = fp.readline()
                         driving_p += float(line.split()[4].strip())
-                    elif 'Walking Regression Summary' in line:
+                        results[country]['driving_p'] = float(line.split()[4].strip())
+                    elif 'Walking Regression Summary' in unsplit_line:
                         for x in range(15):
                             line = fp.readline()
                         walking_p += float(line.split()[4].strip())
-                    elif 'Residential Regression Summary' in line:
+                        results[country]['walking_p'] = float(line.split()[4].strip())
+                    elif 'Residential Regression Summary' in unsplit_line:
                         for x in range(15):
                             line = fp.readline()
                         residential_p += float(line.split()[4].strip())
-                    elif 'Workplace Regression Summary' in line:
+                        results[country]['residential_p'] = float(line.split()[4].strip())
+                    elif 'Workplace Regression Summary' in unsplit_line:
                         for x in range(15):
                             line = fp.readline()
                         workplace_p += float(line.split()[4].strip())
+                        results[country]['workplace_p'] = float(line.split()[4].strip())
                     line = fp.readline()
 
         if file.endswith('model_performance.txt'):
@@ -107,7 +120,7 @@ print("Walking Average: " + str(walking_average/apple_count))
 print("Residential Average: " + str(residential_average/google_count))
 print("Workplace Average: " + str(workplace_average/google_count))
 
-print("P-VALUE AVERAGES:")
+print("\nP-VALUE AVERAGES:")
 print("Driving Average: " + str(driving_p/apple_count))
 print("Walking Average: " + str(walking_p/apple_count))
 print("Residential Average: " + str(residential_p/google_count))
@@ -122,3 +135,25 @@ print("LSTM Test Loss Average: " + str(lstm_perf_loss_average/ml_count))
 
 print("GRU Validation Loss Average: " + str(gru_val_loss_average/ml_count))
 print("GRU Test Loss Average: " + str(gru_perf_loss_average/ml_count))
+
+for country in results.keys():
+    if results[country]['driving_p'] >= .05:
+        del results[country]['driving_p']
+        del results[country]['driving_r_sq']
+
+    if results[country]['walking_p'] >= .05:
+        del results[country]['walking_p']
+        del results[country]['walking_r_sq']
+
+    try:
+        if results[country]['residential_p'] >= .05:
+            del results[country]['residential_p']
+            del results[country]['residential_r_sq']
+
+        if results[country]['workplace_p'] >= .05:
+            del results[country]['workplace_p']
+            del results[country]['workplace_r_sq']
+    except:
+        print("Google Data Not Included")
+
+print(results)
