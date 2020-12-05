@@ -419,7 +419,7 @@ for df in country_df_list:
         tf.keras.layers.Dense(units=1)
     ])
 
-    compile_and_fit(rnn_model, w, MAX_EPOCHS=50)
+    compile_and_fit(rnn_model, w, MAX_EPOCHS=500)
     rnn_val_performance = str(rnn_model.evaluate(w.train, verbose=0))
     rnn_performance = str(rnn_model.evaluate(w.test, verbose=0))
 
@@ -433,7 +433,7 @@ for df in country_df_list:
         tf.keras.layers.Dense(units=1)
     ])
 
-    compile_and_fit(lstm_model, w, MAX_EPOCHS=50)
+    compile_and_fit(lstm_model, w, MAX_EPOCHS=500)
     lstm_val_performance = str(lstm_model.evaluate(w.train, verbose=0))
     lstm_performance = str(lstm_model.evaluate(w.test, verbose=0))
 
@@ -447,7 +447,7 @@ for df in country_df_list:
         tf.keras.layers.Dense(units=1)
     ])
 
-    compile_and_fit(gru_model, w, MAX_EPOCHS=50)
+    compile_and_fit(gru_model, w, MAX_EPOCHS=500)
     gru_val_performance = str(gru_model.evaluate(w.train, verbose=0))
     gru_performance = str(gru_model.evaluate(w.test, verbose=0))
 
